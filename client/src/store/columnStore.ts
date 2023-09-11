@@ -1,5 +1,6 @@
 import { reactive } from 'vue'
 import type { MyStoreState, ColumnItem } from './columnStoreTypes'
+import { getAllCountries } from '@/services/countriesApi/controller'
 
 const initialData: MyStoreState = {
   columns: {
@@ -43,6 +44,14 @@ const mutations = {
       state.columns[columnName].push(newItem)
     } else {
       mutations.setError(`Column with name "${columnName}" doesn't exist in store`)
+    }
+  },
+
+  addMultipleData: (columnName: string, items: ColumnItem[]) => {
+    if (state.columns[columnName]) {
+      state.columns[columnName].push(...items)
+    } else {
+      console.error(`Column '${columnName}' does not exist in state.columns.`)
     }
   },
 
@@ -102,7 +111,15 @@ const actions = {
     try {
       mutations.setLoading(true)
 
-      // fetch
+      const countries: any = await getAllCountries()
+
+      const processedData = countries.map((item: ColumnItem) => ({
+        name: item.name,
+        isChecked: false
+      }))
+      const dataToBeAdded = processedData.slice(state.counter * limit, (state.counter + 1) * limit)
+
+      mutations.addMultipleData('A', dataToBeAdded)
 
       mutations.incrementCounter()
       mutations.setLoading(false)
