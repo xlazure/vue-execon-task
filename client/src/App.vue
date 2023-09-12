@@ -1,32 +1,15 @@
 <script setup lang="ts">
 import ColumnComponent from './components/ColumnComponent.vue'
-import { onMounted, ref } from 'vue'
+import useColumnStore from './store/columnStore'
 
-const store = ref<any>(null) // Replace 'any' with your store type if available
-
-const fetchDataToFirstColumn = () => {
-  if (store.value) {
-    store.value.actions.fetchDataToFirstColumn()
-  }
-}
-
-const resetStore = () => {
-  if (store.value) {
-    store.value.mutations.resetStore()
-  }
-}
-
-// Assuming you have access to the store instance from the setup context
-onMounted(() => {
-  store.value = this.$store
-})
+const { actions, mutations } = useColumnStore()
 </script>
 
 <template>
   <ColumnComponent columnName="A">
     <template #objects>
       <button @click="actions.fetchDataToFirstColumn">Download data</button>
-      <button @click="resetStore">Reset</button>
+      <button @click="mutations.resetStore">Reset</button>
     </template>
   </ColumnComponent>
   <ColumnComponent columnName="B" />
