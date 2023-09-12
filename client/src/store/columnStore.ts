@@ -1,4 +1,4 @@
-import { reactive } from 'vue'
+import { computed, reactive } from 'vue'
 import type { MyStoreState, ColumnItem } from './columnStoreTypes'
 import { getAllCountries } from '@/services/countriesApi/controller'
 
@@ -13,9 +13,9 @@ const initialData: MyStoreState = {
   counter: 0
 }
 
-const state = reactive<MyStoreState>({ ...initialData })
+export const state = reactive<MyStoreState>({ ...initialData })
 
-const getters = {
+export const getters = {
   getColumnData: (columnName: string) => {
     if (columnName in state.columns) {
       return state.columns[columnName]
@@ -38,7 +38,7 @@ const getters = {
   }
 }
 
-const mutations = {
+export const mutations = {
   createItem: (columnName: string, newItem: ColumnItem) => {
     if (columnName in state.columns) {
       state.columns[columnName].push(newItem)
@@ -104,7 +104,7 @@ const mutations = {
     Object.assign(state, { ...initialData })
   }
 }
-const actions = {
+export const actions = {
   fetchDataToFirstColumn: async () => {
     const limit: number = 20
 
