@@ -2,26 +2,48 @@
 import { onMounted } from 'vue'
 import type { ColumnPropsType } from './types'
 import ColumnInputPicker from './ColumnInputPicker.vue'
+import useColumnStore from '@/store/columnStore';
 
 const { columnName }: ColumnPropsType = defineProps(['columnName'])
+const { mutations } = useColumnStore()
 
 function onDrop(event: DragEvent) {
-  //   const target = event.target as HTMLElement
-  //   const direction = target.id
-  //   const data: string | undefined = event.dataTransfer?.getData('application/json')
-  //   if (!data) return
-  //   const { source, itemProps } = JSON.parse(data)
-  //   if (source === 'A' && direction === 'B') {
-  //     if (itemProps.isChecked) {
-  //       countryStore.mutations.changeItemCheckState('A', itemProps.name, itemProps.isChecked)
-  //     }
-  //     countryStore.mutations.addItemToColumn('B', itemProps)
-  //   }
-  //   if (source === 'C' && direction === 'A') {
-  //     countryStore.mutations.changeItemCheckState('A', itemProps.name, !itemProps.isChecked)
-  //     countryStore.mutations.removeItemFromColumn('B', itemProps)
-  //     countryStore.mutations.removeItemFromColumn('C', itemProps)
-  //   }
+  const target = event.target as HTMLElement;
+  const direction = target.id;
+  const data: string | undefined =
+    event.dataTransfer?.getData("application/json");
+
+  if (!data) return;
+
+  const { source, inputProps } = JSON.parse(data);
+  if (source === "A" && direction === "B") {
+    console.log('drag-add:',inputProps)
+    if (inputProps.isChecked) {
+      mutations.updateItem(
+        source,
+        {
+          name: inputProps.name,
+          isChecked: inputProps.isChecked,
+          id: inputProps.id
+        }
+      );
+      mutations.createItem(direction, inputProps);
+    }
+  }
+  if (source === "C" && direction === "A") {
+    console.log('drag-remove:',inputProps)
+    mutations.deleteItem("B", inputProps);
+    mutations.deleteItem("C", inputProps);
+    mutations.updateItem(
+      direction,
+      {
+        name: inputProps.name,
+        isChecked: false,
+        id: inputProps.id
+      }
+    );
+
+  }
 }
 </script>
 
