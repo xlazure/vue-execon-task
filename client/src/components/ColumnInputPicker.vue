@@ -1,8 +1,7 @@
 <template>
   <div>
-    <span v-for="(item, index) in columnData" :key="index">
-      <!-- Use the dynamically loaded component -->
-      <component :is="DynamicComponent" :inputProps="item" :isDraggable="isDraggable"></component>
+    <span v-for="(item, index) in columnData" :key="item.id">
+      <component :is="DynamicComponent" :inputProps="item" :isDraggable="isDraggable" :index="index" :columnName="columnName"></component>
     </span>
   </div>
   <p v-if="isLoading && columnName === 'A'">Loading...</p>

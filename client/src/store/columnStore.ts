@@ -1,6 +1,7 @@
-import { computed, reactive } from 'vue'
+import { inject, reactive, watch } from 'vue'
 import type { MyStoreState, ColumnItem } from './columnStoreTypes'
 import { getAllCountries } from '@/services/countriesApi/controller'
+import { addDataToLocalStorage } from '@/localStorage'
 
 const initialData: MyStoreState = {
   columns: {
@@ -10,7 +11,8 @@ const initialData: MyStoreState = {
   },
   loading: false,
   error: null,
-  counter: 0
+  counter: 0,
+  fetching: true
 }
 
 export const state = reactive<MyStoreState>({ ...initialData })
@@ -35,17 +37,29 @@ export const getters = {
 
   isLoading: () => {
     return state.loading
-  }
+  },
+
 }
 
 export const mutations = {
+  setFetching: (value:boolean)=>{
+    state.fetching = value
+  },
   createItem: (columnName: string, newItem: ColumnItem) => {
     if (columnName in state.columns) {
-      state.columns[columnName].push(newItem)
+      const column = state.columns[columnName];
+      
+      // Check if an item with the same name already exists
+      const existingItem = column.find((item) => item.name === newItem.name);
+      
+      if (!existingItem) {
+        column.push(newItem);
+      }
     } else {
-      mutations.setError(`Column with name "${columnName}" doesn't exist in store`)
+      mutations.setError(`Column with name "${columnName}" doesn't exist in store`);
     }
   },
+  
 
   addMultipleData: (columnName: string, items: ColumnItem[]) => {
     if (state.columns[columnName]) {
@@ -55,35 +69,59 @@ export const mutations = {
     }
   },
 
-  updateItem: (columnName: string, itemId: number, updatedItem: ColumnItem) => {
+  updateItem: (columnName: string, updatedItem: ColumnItem) => {
     if (columnName in state.columns) {
       const column = state.columns[columnName]
-      const index = column.findIndex((item) => item.id === itemId)
+      const index = column.findIndex((item) => item.name === updatedItem.name)
 
       if (index !== -1) {
         column.splice(index, 1, updatedItem)
       } else {
-        mutations.setError(`Item with ID "${itemId}" not found in column "${columnName}"`)
+        mutations.setError(`Item with name "${updatedItem.name}" not found in column "${columnName}"`)
       }
     } else {
       mutations.setError(`Column with name "${columnName}" doesn't exist in store`)
     }
   },
 
-  deleteItem: (columnName: string, itemId: number) => {
+  deleteItem: (columnName: string, deletedItem: ColumnItem) => {
     if (columnName in state.columns) {
-      const column = state.columns[columnName]
-      const index = column.findIndex((item) => item.id === itemId)
-
-      if (index !== -1) {
-        column.splice(index, 1)
+      const column = state.columns[columnName];
+      const updatedColumn = column.filter((item) => item.id !== deletedItem.id);
+  
+      if (updatedColumn.length === column.length) {
+        mutations.setError(`Item with id "${deletedItem.id}" not found in column "${columnName}"`);
       } else {
-        mutations.setError(`Item with ID "${itemId}" not found in column "${columnName}"`)
+        state.columns[columnName] = updatedColumn;
       }
+    } else {
+      mutations.setError(`Column with name "${columnName}" doesn't exist in store`);
+    }
+  },
+
+  // deleteItem: (columnName: string, deletedItem: ColumnItem) => {
+  //   if (columnName in state.columns) {
+  //     const column = state.columns[columnName]
+  //     const index = column.findIndex((item) => item.id === deletedItem.id)
+
+  //     if (index !== -1) {
+  //       column.splice(index, 1)
+  //     } else {
+  //       mutations.setError(`Item with name "${deletedItem.name}" not found in column "${columnName}"`)
+  //     }
+  //   } else {
+  //     mutations.setError(`Column with name "${columnName}" doesn't exist in store`)
+  //   }
+  // },
+
+  setColumn: (columnName: string, item: ColumnItem) => {
+    if (columnName in state.columns) {
+      state.columns[columnName] = [item]
     } else {
       mutations.setError(`Column with name "${columnName}" doesn't exist in store`)
     }
   },
+
   setError: (error: string | null) => {
     state.error = error
   },
@@ -100,8 +138,13 @@ export const mutations = {
     state.loading = loading
   },
 
-  resetStore: () => {
-    Object.assign(state, { ...initialData })
+  setCounter: (counter: number) => {
+    state.counter = counter
+  },
+
+  reset: () => {
+    state.columns = { A:[],B:[],C:[] };
+    state.counter = 0;
   }
 }
 export const actions = {
@@ -115,16 +158,35 @@ export const actions = {
 
       const processedData = countries.map((item: ColumnItem) => ({
         name: item.name,
-        isChecked: false
+        isChecked: false,
+        id: Math.random().toString(36).slice(2, 9)
       }))
       const dataToBeAdded = processedData.slice(state.counter * limit, (state.counter + 1) * limit)
-
       mutations.addMultipleData('A', dataToBeAdded)
 
       mutations.incrementCounter()
       mutations.setLoading(false)
+
+      if(state.fetching) {
+        addDataToLocalStorage('counter',state.counter)
+      }
+
     } catch (error) {
       mutations.setError('Error fetching countries:' + error)
+    }
+  },
+
+  selectActiveItemFormColumn: (columnName: string, item: ColumnItem) => {
+    const column = state.columns[columnName]
+    const index = column.findIndex((item2) => item2.id === item.id)
+
+    if (index !== -1) {
+      column[index].isActive = true
+      column.forEach((item2) => {
+        if (item2.id !== item.id) {
+          item2.isActive = false
+        }
+      })
     }
   }
 }
@@ -132,7 +194,17 @@ export const actions = {
 const useColumnStore = () => ({
   getters,
   mutations,
-  actions
+  actions,
+  state
 })
+
+watch(
+  () => state.columns,
+  (newColumns,oldColumns) => {
+    if (!state.fetching) return;
+    addDataToLocalStorage('columns', oldColumns)
+  },
+  { deep: true }
+)
 
 export default useColumnStore

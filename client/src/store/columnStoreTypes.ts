@@ -1,7 +1,8 @@
 export interface ColumnItem {
   id: number
   name: string
-  isChecked: boolean
+  isChecked?: boolean
+  isActive?: boolean
 }
 
 export interface Columns {
@@ -13,4 +14,5 @@ export interface MyStoreState {
   loading: boolean
   error: string | null
   counter: number
+  fetching: boolean
 }
