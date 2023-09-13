@@ -3,9 +3,10 @@ import { inject, onBeforeMount, watch } from 'vue';
 import ColumnComponent from './components/ColumnComponent.vue'
 import useColumnStore from './store/columnStore'
 import { addDataToLocalStorage, loadDataFromLocalStorage } from './localStorage'
+import { getColumnByName, removeAllDataFormColumns } from './services/databaseApi/controller'
 // import type { Item } from './components/types'
 
-const { actions, mutations,getters } = useColumnStore()
+const { actions, mutations, getters } = useColumnStore()
 const fetchMethod: any = inject('fetchMethod')
 
 function handleChange(e: any) {
@@ -21,53 +22,70 @@ function localFetch() {
   const counter = JSON.parse(counterData)
   const columns = JSON.parse(columnsData)
 
-  if(counter) {
+  if (counter) {
     mutations.setCounter(counter)
   }
 
-  if(!columns) {
+  if (!columns) {
     mutations.setError('Cannot fetch data from local storage');
     return
   };
-  
+
   const columnsKeys: string[] = Object.keys(columns)
 
-  columnsKeys.map((key:string) => {
-    mutations.addMultipleData(key,columns[key])
+  columnsKeys.map((key: string) => {
+    mutations.addMultipleData(key, columns[key])
   })
 
 }
 
-function restApiFetch() {
-  console.log('rest api')
+async function restApiFetch() {
+  console.log('rest api');
+  const foo = ['A', 'B', 'C'];
+
+  const bar = await Promise.all(foo.map((columnName) => getColumnByName(columnName)));
+
+  const result: Record<string, any> = bar.reduce((acc: any, value: any, index: number) => {
+    acc[foo[index]] = value;
+    mutations.addMultipleData(foo[index], value)
+    return acc;
+  }, {});
+
+  console.log(result);
+
 }
 
 function getFetchMode() {
   const isFetching: string | null = loadDataFromLocalStorage('fetchMethod')
-  if(!isFetching) return
-  const isLocalFetching = JSON.parse(isFetching) 
+  if (!isFetching) return
+  const isLocalFetching = JSON.parse(isFetching)
   return fetchMethod.value = isLocalFetching
 }
 
 function hardReset() {
 
-  addDataToLocalStorage('columns',{A:[],B:[],C:[]})
-  addDataToLocalStorage('counter',0)
+
+  if (fetchMethod.value) {
+    addDataToLocalStorage('columns', { A: [], B: [], C: [] })
+    addDataToLocalStorage('counter', 0)
+  } else {
+    removeAllDataFormColumns()
+  }
   mutations.reset()
 }
 
 onBeforeMount(() => {
   getFetchMode()
-  if(fetchMethod.value) localFetch()
+  if (fetchMethod.value) localFetch()
   else restApiFetch()
 })
 watch(fetchMethod, () => {
   mutations.reset()
-  if (fetchMethod.value) localFetch();
-  else restApiFetch();
+  if (fetchMethod.value) localFetch()
+  else restApiFetch()
 });
 
-watch(getters.getError,()=>{
+watch(getters.getError, () => {
   console.log(getters.getError())
 })
 

@@ -1,8 +1,9 @@
 export interface ColumnItem {
-  id: number
+  id?: number
   name: string
   isChecked?: boolean
   isActive?: boolean
+  uuid?: string;
 }
 
 export interface Columns {

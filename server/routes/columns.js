@@ -7,6 +7,8 @@ router.get("/:columnName", columnsController.getColumnsByName);
 
 router.post("/:columnName/single", columnsController.addDataToTable);
 
+router.post("/replaceC", columnsController.addItemsToColumnC);
+
 router.post("/:columnName/multiple", columnsController.addMultipleDataToTable);
 
 router.put("/:columnName/:id", columnsController.updateColumn);

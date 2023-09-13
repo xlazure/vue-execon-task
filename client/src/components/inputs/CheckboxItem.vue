@@ -15,7 +15,7 @@ import useColumnStore from '@/store/columnStore';
 import type { ColumnItem } from '@/store/columnStoreTypes';
 
 const { inputProps, isDraggable, index, columnName } = defineProps(['inputProps', 'isDraggable', 'index', 'columnName'])
-const { mutations, getters } = useColumnStore()
+const { mutations } = useColumnStore()
 
 function onDragStart(event: DragEvent) {
   const data = {
@@ -23,24 +23,24 @@ function onDragStart(event: DragEvent) {
     inputProps: {
       name: inputProps.name,
       isChecked: !inputProps.isChecked,
-      id: inputProps.id
+      uuid: inputProps.uuid
     },
   };
   event.dataTransfer?.setData("application/json", JSON.stringify(data));
 }
 
 function handleChange(event: Event) {
+  console.log(inputProps)
   const target = event.target as HTMLInputElement
-  const { name, isActive, id } = inputProps;
-
-  mutations.updateItem(columnName, { name, isChecked: target.checked, id })
+  const { name, uuid } = inputProps;
+  mutations.updateItem(columnName, { name, isChecked: target.checked, uuid })
 
   if (target.checked) {
     
     const newItem: ColumnItem = {
       name,
-      isActive,
-      id
+      isActive: false,
+      uuid
     }
 
     mutations.createItem('B', newItem)

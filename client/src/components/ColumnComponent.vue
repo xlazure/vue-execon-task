@@ -24,7 +24,7 @@ function onDrop(event: DragEvent) {
         {
           name: inputProps.name,
           isChecked: inputProps.isChecked,
-          id: inputProps.id
+          uuid: inputProps.uuid
         }
       );
       mutations.createItem(direction, inputProps);
@@ -39,7 +39,7 @@ function onDrop(event: DragEvent) {
       {
         name: inputProps.name,
         isChecked: false,
-        id: inputProps.id
+        uuid: inputProps.uuid
       }
     );
 

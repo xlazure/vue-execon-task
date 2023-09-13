@@ -97,17 +97,14 @@ exports.getColumnsByName = (req, res) => {
 // Add data to a table specified by columnName
 exports.addDataToTable = (req, res) => {
   const columnName = req.params.columnName;
-  const { name, isChecked } = req.body; // Assuming the request body includes name and isChecked properties
-  // Validate the data or perform any necessary input validation here
-
-  // Construct the INSERT INTO query
+  const { name, isChecked,isActive,uuid } = req.body; // Assuming the request body includes name and isChecked properties
   const insertQuery = `
-    INSERT INTO ${columnName} (name, isChecked)
-    VALUES (?, ?)
+    INSERT INTO ${columnName} (name,${isChecked === false ? "isChecked," : ""}${isActive === false ? "isActive," : ""} uuid)
+    VALUES (?,${isChecked === false ? "?," : ""}${isActive === false ? "?," : ""}?)
   `;
 
   // Execute the INSERT INTO query
-  db.run(insertQuery, [name, isChecked ? 1 : 0], function (err) {
+  db.run(insertQuery, [name, isChecked ? 1 : isActive ? 1 : 0, uuid], function (err) {
     if (err) {
       return res.status(500).json({ error: err.message });
     }
@@ -125,20 +122,22 @@ exports.addMultipleDataToTable = (req, res) => {
   // Validate the data or perform any necessary input validation here
 
   // Construct the INSERT INTO query for batch insertion with an ON CONFLICT clause
-  const insertQuery = `
-    INSERT OR IGNORE INTO ${columnName} (name, isChecked)
-    VALUES (?, ?)
-  `;
+
 
   // Use a Set to track unique names and skip duplicates
   const uniqueNames = new Set();
 
   // Loop through the array and insert each object as a separate row
   data.forEach((item, index) => {
-    const { name, isChecked } = item;
+    const { name, isChecked,uuid } = item;
+
+    const insertQuery = `
+    INSERT INTO ${columnName} (name,${isChecked !== null ? "isChecked," : ""} uuid)
+    VALUES (?,${isChecked !== null ? "?," : ""} ?)
+  `;
 
     if (!uniqueNames.has(name)) {
-      db.run(insertQuery, [name, isChecked ? 1 : 0], function (err) {
+      db.run(insertQuery, [name, isChecked ? 1 : 0, uuid], function (err) {
         if (err) {
           return res.status(500).json({ error: err.message });
         }
@@ -216,5 +215,67 @@ exports.deleteColumn = (req, res) => {
     }
 
     res.json({ message: "Record deleted successfully" });
+  });
+};
+
+
+exports.addItemsToColumnC = (req, res) => {
+  // Get the new data for column C from the request body
+  const newDataForColumnC = req.body;
+
+  // Check if newDataForColumnC is an array
+  if (!Array.isArray(newDataForColumnC)) {
+    return res.status(400).json({ error: "Invalid input data. Expected an array of objects." });
+  }
+
+  // Create an array to store the values to be inserted
+  const valuesToInsert = [];
+
+  // Iterate through the array and extract 'name' and 'uuid' properties
+  for (const item of newDataForColumnC) {
+    if (item && typeof item === "object" && "name" in item && "uuid" in item) {
+      const { name, uuid } = item;
+      valuesToInsert.push([name, uuid]);
+    }
+  }
+
+  if (valuesToInsert.length === 0) {
+    return res.status(400).json({ error: "No valid data to insert into column C." });
+  }
+
+  // Begin a transaction
+  db.serialize(() => {
+    db.run("BEGIN");
+
+    // Delete existing data from table C
+    db.run("DELETE FROM C", (err) => {
+      if (err) {
+        db.run("ROLLBACK");
+        return res.status(500).json({ error: err.message });
+      }
+
+      // Insert the new data into table C
+      const insertQuery = `
+        INSERT INTO C (name, uuid)
+        VALUES (?, ?)
+      `;
+
+      for (const [name, uuid] of valuesToInsert) {
+        db.run(insertQuery, [name, uuid], (err) => {
+          if (err) {
+            db.run("ROLLBACK");
+            return res.status(500).json({ error: err.message });
+          }
+        });
+      }
+
+      // Commit the transaction
+      db.run("COMMIT", (err) => {
+        if (err) {
+          return res.status(500).json({ error: err.message });
+        }
+        res.json({ message: "Items added to column C successfully" });
+      });
+    });
   });
 };

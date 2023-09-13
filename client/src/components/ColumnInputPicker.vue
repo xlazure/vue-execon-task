@@ -1,6 +1,6 @@
 <template>
   <div>
-    <span v-for="(item, index) in columnData" :key="item.id">
+    <span v-for="(item, index) in columnData" :key="item.uuid">
       <component :is="DynamicComponent" :inputProps="item" :isDraggable="isDraggable" :index="index" :columnName="columnName"></component>
     </span>
   </div>

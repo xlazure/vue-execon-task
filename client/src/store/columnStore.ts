@@ -2,6 +2,7 @@ import { inject, reactive, watch } from 'vue'
 import type { MyStoreState, ColumnItem } from './columnStoreTypes'
 import { getAllCountries } from '@/services/countriesApi/controller'
 import { addDataToLocalStorage } from '@/localStorage'
+import {addMultipleDataToColumn,addDataToColumn, replaceOrAddToColumnC} from '../services/databaseApi/controller'
 
 const initialData: MyStoreState = {
   columns: {
@@ -48,12 +49,13 @@ export const mutations = {
   createItem: (columnName: string, newItem: ColumnItem) => {
     if (columnName in state.columns) {
       const column = state.columns[columnName];
-      
+      console.log(newItem)
       // Check if an item with the same name already exists
       const existingItem = column.find((item) => item.name === newItem.name);
       
       if (!existingItem) {
         column.push(newItem);
+        addDataToColumn(columnName,newItem)
       }
     } else {
       mutations.setError(`Column with name "${columnName}" doesn't exist in store`);
@@ -87,10 +89,10 @@ export const mutations = {
   deleteItem: (columnName: string, deletedItem: ColumnItem) => {
     if (columnName in state.columns) {
       const column = state.columns[columnName];
-      const updatedColumn = column.filter((item) => item.id !== deletedItem.id);
+      const updatedColumn = column.filter((item) => item.uuid !== deletedItem.uuid);
   
       if (updatedColumn.length === column.length) {
-        mutations.setError(`Item with id "${deletedItem.id}" not found in column "${columnName}"`);
+        mutations.setError(`Item with uuid "${deletedItem.uuid}" not found in column "${columnName}"`);
       } else {
         state.columns[columnName] = updatedColumn;
       }
@@ -102,7 +104,7 @@ export const mutations = {
   // deleteItem: (columnName: string, deletedItem: ColumnItem) => {
   //   if (columnName in state.columns) {
   //     const column = state.columns[columnName]
-  //     const index = column.findIndex((item) => item.id === deletedItem.id)
+  //     const index = column.findIndex((item) => item.uuid === deletedItem.uuid)
 
   //     if (index !== -1) {
   //       column.splice(index, 1)
@@ -114,9 +116,11 @@ export const mutations = {
   //   }
   // },
 
-  setColumn: (columnName: string, item: ColumnItem) => {
+  setColumn: async (columnName: string, item: ColumnItem) => {
     if (columnName in state.columns) {
       state.columns[columnName] = [item]
+      // replaceOrAddToColumnC
+      await replaceOrAddToColumnC([item])
     } else {
       mutations.setError(`Column with name "${columnName}" doesn't exist in store`)
     }
@@ -159,10 +163,12 @@ export const actions = {
       const processedData = countries.map((item: ColumnItem) => ({
         name: item.name,
         isChecked: false,
-        id: Math.random().toString(36).slice(2, 9)
+        uuid: Math.random().toString(36).slice(2, 9)
       }))
       const dataToBeAdded = processedData.slice(state.counter * limit, (state.counter + 1) * limit)
+      
       mutations.addMultipleData('A', dataToBeAdded)
+      await addMultipleDataToColumn("A", dataToBeAdded);
 
       mutations.incrementCounter()
       mutations.setLoading(false)
@@ -178,12 +184,12 @@ export const actions = {
 
   selectActiveItemFormColumn: (columnName: string, item: ColumnItem) => {
     const column = state.columns[columnName]
-    const index = column.findIndex((item2) => item2.id === item.id)
+    const index = column.findIndex((item2) => item2.uuid === item.uuid)
 
     if (index !== -1) {
       column[index].isActive = true
       column.forEach((item2) => {
-        if (item2.id !== item.id) {
+        if (item2.uuid !== item.uuid) {
           item2.isActive = false
         }
       })
