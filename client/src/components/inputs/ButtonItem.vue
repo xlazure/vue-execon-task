@@ -1,14 +1,15 @@
 <template>
-  <button :draggable="isDraggable" @dragstart="onDragStart">
+  <button :draggable="isDraggable" @dragstart="onDragStart" :class="{selected: isSelected}">
     {{ inputProps.name }}
   </button>
 </template>
 
 <script lang="ts" setup>
-const { inputProps, isDraggable, columnName } = defineProps([
+const { inputProps, isDraggable, columnName,isSelected } = defineProps([
   'inputProps',
   'isDraggable',
-  'columnName'
+  'columnName',
+  'isSelected'
 ])
 
 function onDragStart(event: DragEvent) {
@@ -24,7 +25,6 @@ function onDragStart(event: DragEvent) {
 button {
   user-select: none;
   overflow: hidden;
-  outline: none;
   border: none;
   float: left;
   margin: 0.1rem;

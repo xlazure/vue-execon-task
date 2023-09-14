@@ -107,7 +107,7 @@ export const mutations = {
     if (columnName in state.columns) {
       const column = state.columns[columnName]
 
-      const itemIndex = column.findIndex((item) => item.uuid === deletedItem.uuid)
+      const itemIndex = column.findIndex((item:ColumnItem) => item.uuid === deletedItem.uuid)
 
       if (itemIndex !== -1) {
         column.splice(itemIndex, 1)

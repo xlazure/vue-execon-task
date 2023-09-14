@@ -46,8 +46,6 @@ export async function restApiFetch(callback: Function) {
       mutations.setCounter(Number(counter[0].value))
     }
 
-    // mutations.setCounter(Number(counter))
-
     columns.reduce((acc: any, value: any, index: number) => {
       mutations.addMultipleData(config.columns[index], value)
     }, {})

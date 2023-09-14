@@ -8,7 +8,7 @@
       :checked="inputProps.isActive"
     />
     <label :for="'r' + index" :draggable="isDraggable" >
-      <span class="custom-button">
+      <span class="custom-button" :class="{selected: isSelected}">
         {{ inputProps.name }}
       </span>
     </label>
@@ -16,9 +16,9 @@
 </template>
 
 <script lang="ts" setup>
-import useColumnStore from '@/store/columnStore';
+import useColumnStore from '@/store/columnStore'
 
-const { inputProps, isDraggable,index } = defineProps(['inputProps', 'isDraggable','index'])
+const { inputProps, isDraggable,index,isSelected} = defineProps(['inputProps', 'isDraggable','index','columnFocus','currentIndex','columnName','isSelected'])
 const { actions, mutations } = useColumnStore()
 
 function handleClick() {
@@ -30,7 +30,6 @@ function handleClick() {
 <style lang="scss" scoped>
 label {
   user-select: none;
-  overflow: hidden;
   float: left;
   margin: 0.1rem;
   background-color: #000;

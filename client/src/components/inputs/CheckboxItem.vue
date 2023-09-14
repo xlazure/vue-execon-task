@@ -6,8 +6,9 @@
       :checked="inputProps.isChecked"
       :name="inputProps.name"
       @change="handleChange"
+
     />
-    <label :for="'c' + index" :draggable="isDraggable" @dragstart="onDragStart">
+    <label :for="'c' + index" :draggable="isDraggable" @dragstart="onDragStart"  :class="{selected: isSelected}" >
       <span class="custom-button">
         {{ inputProps.name }}
       </span>
@@ -19,11 +20,12 @@
 import useColumnStore from '@/store/columnStore'
 import type { ColumnItem } from '@/store/columnStoreTypes'
 
-const { inputProps, isDraggable, index, columnName } = defineProps([
+const { inputProps, isDraggable, index, columnName,isSelected} = defineProps([
   'inputProps',
   'isDraggable',
   'index',
-  'columnName'
+  'columnName',
+  'isSelected'
 ])
 const { mutations } = useColumnStore()
 
@@ -57,9 +59,15 @@ function handleChange(event: Event) {
     mutations.deleteItem('C', inputProps)
   }
 }
+
+
+
+
 </script>
 
 <style lang="scss" scoped>
+
+
 label {
   user-select: none;
   overflow: hidden;
@@ -73,6 +81,8 @@ label {
   &:focus,
   &:active {
     opacity: 0.6;
+
+background-color: red;
   }
 
   .custom-button {

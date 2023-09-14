@@ -2,13 +2,16 @@
 import type { ColumnPropsType } from './types'
 import ColumnInputPicker from './ColumnInputPicker.vue'
 import useColumnStore from '@/store/columnStore'
-import { computed, ref, type Ref } from 'vue'
+import { computed, inject, ref, type Ref } from 'vue'
 
 const { columnName }: ColumnPropsType = defineProps(['columnName'])
 const { mutations } = useColumnStore()
 
+const focusedColumnName = inject('columnFocus') as Ref<string | undefined>;
 const currentColumn: Ref<string | undefined> = ref('')
-const isAnimated = computed(() => columnName === currentColumn.value)
+  
+  const isAnimated = computed(() => columnName === currentColumn.value)
+
 
 function onDrop(event: DragEvent) {
   const target = event.target as HTMLElement
@@ -58,10 +61,16 @@ function handleDragLeave(e: any) {
     currentColumn.value = ''
   }
 }
+
+
+function setFocusColumn() {
+  if (!focusedColumnName && columnName === undefined) return;
+  focusedColumnName.value = columnName
+}
 </script>
 
 <template>
-  <section @drop="onDrop" @dragover.prevent>
+  <section @drop="onDrop" @dragover.prevent @click="setFocusColumn">
     <h1>{{ columnName }}</h1>
     <div class="wrapper">
       <div v-if="$slots.objects" class="block">
