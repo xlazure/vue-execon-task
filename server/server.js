@@ -14,7 +14,9 @@ app.use(cors());
 app.use("/api", routes);
 
 app.get("/", async (req, res, next) => {
-  return res.status(200).send("<h1>EXE TASK API</h1>");
+  return res.status(200).json({
+    title: "EXE TASK API",
+  });
 });
 
 const PORT = process.env.PORT || 3000;
