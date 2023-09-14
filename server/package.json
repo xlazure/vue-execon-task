@@ -1,10 +1,12 @@
 {
   "name": "server",
   "version": "1.0.0",
-  "description": "",
+  "description": "exe task rest api",
   "main": "server.js",
+  "engines": {
+    "node": "18.x"
+  },
   "scripts": {
-    "start:node": "node server.js",
     "start:nodemon": "nodemon server.js"
   },
   "keywords": [],
@@ -13,6 +15,7 @@
   "dependencies": {
     "cors": "^2.8.5",
     "express": "^4.18.2",
+    "nodemon": "^3.0.1",
     "sqlite3": "^5.1.6"
   }
 }
