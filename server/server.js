@@ -13,7 +13,7 @@ app.use(cors());
 
 app.use("/api", routes);
 
-app.get("/", async (req, res, next) => {
+app.use("/", async (req, res, next) => {
   return res.status(200).json({
     title: "EXE TASK API",
   });
