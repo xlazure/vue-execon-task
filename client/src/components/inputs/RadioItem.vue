@@ -18,7 +18,7 @@
 <script lang="ts" setup>
 import useColumnStore from '@/store/columnStore'
 
-const { inputProps, isDraggable,index,isSelected} = defineProps(['inputProps', 'isDraggable','index','columnFocus','currentIndex','columnName','isSelected'])
+const { inputProps, isDraggable,index,isSelected} = defineProps(['inputProps', 'isDraggable','index','isSelected'])
 const { actions, mutations } = useColumnStore()
 
 function handleClick() {

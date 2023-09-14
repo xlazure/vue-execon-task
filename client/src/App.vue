@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import useColumnStore from './store/columnStore'
-import { inject, onBeforeMount, provide, ref, type Ref } from 'vue'
+import { inject, onBeforeMount, type Ref } from 'vue'
 import ColumnComponent from './components/ColumnComponent.vue'
 import ErrorWidget from './components/ErrorWidget.vue'
 import { addDataToLocalStorage, localFetch, restApiFetch, getFetchMode } from './fetchingMethods'
@@ -45,6 +45,8 @@ onBeforeMount(() => {
   if (fetchMethod?.value) localFetch()
   else restApiFetch(() => changeFetchMethod('fetchMethod', true, true))
 })
+
+
 </script>
 
 <template>
