@@ -10,7 +10,7 @@ const { actions, mutations, initialData } = useColumnStore()
 const fetchMethod = inject<Ref<boolean> | undefined>('fetchMethod')
 
 function handleChange(e: any) {
-  changeFetchMethod(e.target.name, fetchMethod.value)
+  if (fetchMethod) changeFetchMethod(e.target.name, fetchMethod.value)
   switchMode()
 }
 
@@ -18,13 +18,13 @@ function changeFetchMethod(name: string, value: boolean, isRestApi = false) {
   mutations.setFetching(value)
   addDataToLocalStorage(name, value)
   if (isRestApi) {
-    fetchMethod.value = value
+    if (fetchMethod) fetchMethod.value = value
     switchMode(isRestApi)
   }
 }
 
 async function hardReset() {
-  if (fetchMethod.value) {
+  if (fetchMethod?.value) {
     addDataToLocalStorage('columns', initialData.columns)
     addDataToLocalStorage('counter', initialData.counter)
   } else {
@@ -36,13 +36,13 @@ async function hardReset() {
 function switchMode(isServerOff: boolean = false) {
   if (isServerOff) mutations.setError('Switched to browser mode')
   mutations.reset()
-  if (fetchMethod.value) localFetch()
+  if (fetchMethod?.value) localFetch()
   else restApiFetch(() => changeFetchMethod('fetchMethod', true, true))
 }
 
 onBeforeMount(async () => {
   getFetchMode(fetchMethod, (value: boolean) => changeFetchMethod('fetchMethod', value))
-  if (fetchMethod.value) localFetch()
+  if (fetchMethod?.value) localFetch()
   else restApiFetch(() => changeFetchMethod('fetchMethod', true, true))
 })
 </script>

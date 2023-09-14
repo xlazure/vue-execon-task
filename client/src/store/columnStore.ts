@@ -46,6 +46,10 @@ export const getters = {
 
   isLoading: () => {
     return state.loading
+  },
+
+  getIsFetching: () => {
+    return state.fetching
   }
 }
 
