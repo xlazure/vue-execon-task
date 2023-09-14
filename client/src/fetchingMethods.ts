@@ -62,7 +62,6 @@ export function getFetchMode(fetchMethod: any, callback: Function) {
   const isFetching: string | null = loadDataFromLocalStorage('fetchMethod')
   if (!isFetching) return
   const isLocalFetching = JSON.parse(isFetching)
-  //   changeFetchMethod('fetchMethod', isLocalFetching)
   callback(isLocalFetching)
   fetchMethod.value = isLocalFetching
 }

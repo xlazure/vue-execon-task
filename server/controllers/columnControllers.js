@@ -43,8 +43,6 @@ function createTableIfNotExists(tableName, callback) {
 
 exports.setCounterToTable = (req, res) => {
   const { counter } = req.body;
-  console.log("setCounter ", counter);
-  // Validate if counter is a valid integer
   const counterValue = Number(counter);
   if (isNaN(counterValue) || !Number.isInteger(counterValue)) {
     return res.status(400).json({
@@ -84,7 +82,7 @@ exports.deleteAllColumns = (req, res) => {
     if (err) {
       return res.status(500).json({ error: err.message });
     }
-    console.log(rows);
+    rows;
     rows.forEach((row) => {
       const tableName = row.columnName;
 

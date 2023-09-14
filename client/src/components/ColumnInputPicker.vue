@@ -1,7 +1,13 @@
 <template>
   <div>
     <span v-for="(item, index) in columnData" :key="item.uuid">
-      <component :is="DynamicComponent" :inputProps="item" :isDraggable="isDraggable" :index="index" :columnName="columnName"></component>
+      <component
+        :is="DynamicComponent"
+        :inputProps="item"
+        :isDraggable="isDraggable"
+        :index="index"
+        :columnName="columnName"
+      ></component>
     </span>
   </div>
   <p v-if="isLoading && columnName === 'A'">Loading...</p>
@@ -10,7 +16,7 @@
 <script lang="ts" setup>
 import inputConfig from './input.config'
 import useColumnStore from '@/store/columnStore'
-import { computed, defineAsyncComponent } from 'vue' // Import defineAsyncComponent
+import { computed, defineAsyncComponent } from 'vue'
 
 const { columnName }: any = defineProps(['columnName'])
 const columnConfig = inputConfig.columns[columnName]

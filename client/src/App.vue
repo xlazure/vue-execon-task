@@ -34,7 +34,7 @@ async function hardReset() {
 }
 
 function switchMode(isServerOff: boolean = false) {
-  if (isServerOff) mutations.setError('Switched to localStorage mode')
+  if (isServerOff) mutations.setError('Switched to browser mode')
   mutations.reset()
   if (fetchMethod.value) localFetch()
   else restApiFetch(() => changeFetchMethod('fetchMethod', true, true))
@@ -55,15 +55,20 @@ onBeforeMount(async () => {
         <button @click="actions.fetchDataToFirstColumn">Download data</button>
         <button @click="hardReset">Reset</button>
         <br />
-        <input
-          type="checkbox"
-          id="changeFetchMethod"
-          :checked="fetchMethod"
-          v-model="fetchMethod"
-          name="fetchMethod"
-          @change="handleChange"
-        />
-        <label for="changeFetchMethod">{{ fetchMethod ? 'Local host' : 'Rest API' }}</label>
+        <br />
+        <div class="switch">
+          <input
+            class="switch-input"
+            type="checkbox"
+            id="changeFetchMethod"
+            :checked="fetchMethod"
+            v-model="fetchMethod"
+            name="fetchMethod"
+            @change="handleChange"
+          />
+          <label for="changeFetchMethod" class="switch-label">{{}}</label>
+          <p>[SAVING]: {{ fetchMethod ? 'browser' : 'database' }}</p>
+        </div>
       </template>
     </ColumnComponent>
     <ColumnComponent columnName="B" />
@@ -80,5 +85,52 @@ onBeforeMount(async () => {
   grid-template-columns: repeat(3, 1fr);
   width: 100%;
   height: 100vh;
+
+  .switch {
+    margin: 0 auto;
+
+    p {
+      font-weight: 700;
+      font-size: 18px;
+    }
+
+    &-input {
+      display: none;
+    }
+    &-label {
+      transition: all 0.4s ease-in-out;
+      border: 1px solid black;
+      background-color: rgb(254, 254, 254);
+      padding: 2px;
+      border-radius: 12px;
+      overflow: hidden;
+      display: block;
+      position: relative;
+      height: 25px;
+      width: 50px;
+      padding: 0;
+      margin: 0;
+
+      &::after {
+        transition: all 0.4s ease-in-out;
+        top: 0;
+        position: absolute;
+        display: block;
+        content: '';
+        background-color: blue;
+        width: 25px;
+        height: 100%;
+        border-radius: 12px;
+      }
+    }
+
+    input:checked + label::after {
+      transform: translateX(92%);
+      background-color: rgb(255, 0, 0);
+    }
+    input:checked + label {
+      background-color: rgb(183, 183, 183);
+    }
+  }
 }
 </style>

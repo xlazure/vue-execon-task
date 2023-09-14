@@ -24,7 +24,7 @@ export const initialData: MyStoreState = {
   fetching: true
 }
 
-export const state = reactive<MyStoreState>({ ...initialData })
+const state = reactive<MyStoreState>({ ...initialData })
 
 export const getters = {
   getColumnData: (columnName: string) => {
@@ -223,7 +223,6 @@ watch(
   () => state.columns,
   (newColumns, oldColumns) => {
     if (!state.fetching) return
-    console.log('save columns')
     addDataToLocalStorage('columns', newColumns)
   },
   { deep: true }
