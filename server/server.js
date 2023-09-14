@@ -13,6 +13,10 @@ app.use(cors());
 
 app.use("/api", routes);
 
+app.get("/", async (req, res, next) => {
+  return res.status(200).send("<h1>EXE TASK API</h1>");
+});
+
 const PORT = process.env.PORT || 3000;
 
 app.listen(PORT, () => {
