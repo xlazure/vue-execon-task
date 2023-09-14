@@ -1,86 +1,61 @@
-import type { DBData, DatabaseApiResponse } from "./types";
-import DatabaseApiInstace from "./instance";
+import type { DBData, DatabaseApiResponse } from './types'
+import DatabaseApiInstace from './instance'
 
-const COLUMN_PATH = "/columns/";
+const COLUMN_PATH = '/columns/'
 
-export const getColumnByName = async (
-  columnName: string
-): Promise<DBData[]> => {
-  const res = await DatabaseApiInstace.get<DBData[]>(
-    COLUMN_PATH + columnName
-  );
-  return res.data;
-};
+async function handleApiError(apiCall: Promise<any>): Promise<any> {
+  // eslint-disable-next-line no-useless-catch
+  const res = await apiCall
+  return res.data
+}
 
-export const addDataToColumn = async (
+export const getTableByName = async (tableName: string): Promise<DBData[]> => {
+  return handleApiError(DatabaseApiInstace.get<DBData[]>(COLUMN_PATH + tableName))
+}
+
+export const addDataToColumn = async (columnName: string, data: DBData): Promise<any> => {
+  return handleApiError(
+    DatabaseApiInstace.post<DatabaseApiResponse>(COLUMN_PATH + columnName + '/single', data)
+  )
+}
+
+export const setCounterToTable = async (counter: number): Promise<any> => {
+  return handleApiError(DatabaseApiInstace.post<any>(COLUMN_PATH + 'counter', { counter }))
+}
+
+export const addMultipleDataToColumn = async (columnName: string, data: DBData[]): Promise<any> => {
+  return handleApiError(DatabaseApiInstace.post<any>(COLUMN_PATH + columnName + '/multiple', data))
+}
+
+export const replaceOrAddToColumnC = async (data: DBData[]): Promise<any> => {
+  return handleApiError(DatabaseApiInstace.post<any>(COLUMN_PATH + '/replaceC', data))
+}
+
+export const removeAllDataFormColumns = async (): Promise<any> => {
+  return handleApiError(DatabaseApiInstace.delete<any>(COLUMN_PATH))
+}
+
+export const removeDataFromColumnById = async (columnName: string, uuid: string): Promise<any> => {
+  return handleApiError(DatabaseApiInstace.delete<any>(`${COLUMN_PATH}${columnName}/${uuid}`))
+}
+
+export const setActiveItemFromTableById = async (
   columnName: string,
-  data: DBData
+  uuid: string
 ): Promise<any> => {
-  try {
-    console.log(data)
-    const res = await DatabaseApiInstace.post<DatabaseApiResponse>(
-      COLUMN_PATH + columnName + "/single",
-      data
-    );
-    return res.data;
-  } catch (error) {
-    // throw error;
-    console.log(error);
-  }
-};
+  return handleApiError(
+    DatabaseApiInstace.put<any>(`${COLUMN_PATH}setActive/${columnName}/${uuid}`)
+  )
+}
 
-export const addMultipleDataToColumn = async (
+export const updateDataFormColumnById = async (
   columnName: string,
-  data: DBData[]
+  updatedRecord: DBData
 ): Promise<any> => {
-  try {
-    const res = await DatabaseApiInstace.post<any>(
-      COLUMN_PATH + columnName + "/multiple",
-      data
-    );
-    return res.data;
-  } catch (error) {
-    // throw error;
-    console.log(error);
-  }
-};
-export const replaceOrAddToColumnC = async (
-  data: DBData[]
-): Promise<any> => {
-  try {
-    const res = await DatabaseApiInstace.post<any>(
-      COLUMN_PATH + "/replaceC",
-      data
-    );
-    return res.data;
-  } catch (error) {
-    // throw error;
-    console.log(error);
-  }
-};
-
-export const removeAllDataFormColumns = async (
-): Promise<any> => {
-  const res = await DatabaseApiInstace.delete<any>(COLUMN_PATH);
-  return res.data;
-};
-
-export const removeDataFromColumnById = async (columnName: string, id: number): Promise<any> => {
-  try {
-    const res = await DatabaseApiInstace.delete<any>(
-      `${COLUMN_PATH}${columnName}/${id}`
-    );
-    console.log('delete...')
-    return res.data;
-  } catch (error) {
-    // Handle errors here
-    console.error(error);
-    throw error; // You might want to throw the error to handle it at a higher level
-  }
-};
-
-
-export const updateDataFormColumnById = async (columnName: string, updatedRecord: DBData): Promise<any> => {
-  const res = await DatabaseApiInstace.put<any>(COLUMN_PATH + columnName + "/" + updatedRecord.id, updatedRecord);
-  return res.data;
+  return handleApiError(
+    DatabaseApiInstace.put<any>(
+      COLUMN_PATH + 'update/' + columnName + '/' + updatedRecord.uuid,
+      updatedRecord
+    )
+  )
 }

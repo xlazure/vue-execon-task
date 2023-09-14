@@ -7,9 +7,7 @@ import type { DatabaseApiResponse } from './types'
 const OnResponseSuccess = (response: DatabaseApiResponse): DatabaseApiResponse => response
 
 const OnResponseFailure = (error: any): Promise<any> => {
-  const httpStatus = error?.response?.status
-
-  return Promise.reject({ error, httpStatus })
+  return Promise.reject({ error: error.message, code: error.code })
 }
 
 const instance: Readonly<AxiosInstance> = axios.create({

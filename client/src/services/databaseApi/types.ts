@@ -6,6 +6,7 @@ export interface DBData {
   isActive?: boolean
   id?: number
   uuid?: string
+  value?: number
 }
 
 export type DatabaseApiResponse = AxiosResponse<DBData[]>

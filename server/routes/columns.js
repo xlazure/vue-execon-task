@@ -3,20 +3,25 @@ const express = require("express");
 const router = express.Router();
 const columnsController = require("../controllers/columnControllers");
 
-router.get("/:columnName", columnsController.getColumnsByName); 
+router.get("/:tableName", columnsController.getTableByName);
 
-router.post("/:columnName/single", columnsController.addDataToTable);
+router.post("/:tableName/single", columnsController.addDataToTable);
+
+router.post("/counter", columnsController.setCounterToTable);
 
 router.post("/replaceC", columnsController.addItemsToColumnC);
 
-router.post("/:columnName/multiple", columnsController.addMultipleDataToTable);
+router.post("/:tableName/multiple", columnsController.addMultipleDataToTable);
 
-router.put("/:columnName/:id", columnsController.updateColumn);
+router.put("/update/:tableName/:uuid", columnsController.updateColumn);
+
+router.put(
+  "/setActive/:tableName/:uuid",
+  columnsController.setActiveItemInTable
+);
 
 router.delete("/", columnsController.deleteAllColumns);
 
-router.delete("/:columnName/:id", columnsController.deleteColumn);
-
-
+router.delete("/:tableName/:uuid", columnsController.deleteColumn);
 
 module.exports = router;

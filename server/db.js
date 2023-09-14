@@ -6,7 +6,7 @@ db.serialize(() => {
   db.run(`
       CREATE TABLE IF NOT EXISTS counter (
         id INTEGER PRIMARY KEY AUTOINCREMENT,
-        numberValue INTEGER
+        value INTEGER DEFAULT 0
       )
     `);
 

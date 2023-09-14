@@ -3,7 +3,7 @@ export interface ColumnItem {
   name: string
   isChecked?: boolean
   isActive?: boolean
-  uuid?: string;
+  uuid: string
 }
 
 export interface Columns {
@@ -13,7 +13,10 @@ export interface Columns {
 export interface MyStoreState {
   columns: Columns
   loading: boolean
-  error: string | null
+  error: {
+    msg: string
+    code: string
+  }[]
   counter: number
   fetching: boolean
 }

@@ -1,8 +1,6 @@
 const db = require("../db");
 
-// Function to create a table if it doesn't exist and add its name to columns_list
 function createTableIfNotExists(tableName, callback) {
-  // Check if the tableName already exists in columns_list
   const checkIfExistsQuery = `
     SELECT COUNT(*) AS count FROM columns_list WHERE columnName = ?
   `;
@@ -12,7 +10,6 @@ function createTableIfNotExists(tableName, callback) {
       return callback(err);
     }
 
-    // If the count is 0, the tableName doesn't exist, so we can create it
     if (row.count === 0) {
       const createTableQuery = `
         CREATE TABLE IF NOT EXISTS ${tableName} (
@@ -39,16 +36,46 @@ function createTableIfNotExists(tableName, callback) {
         });
       });
     } else {
-      // The tableName already exists in columns_list
       callback(null);
     }
   });
 }
 
+exports.setCounterToTable = (req, res) => {
+  const { counter } = req.body;
+  console.log("setCounter ", counter);
+  // Validate if counter is a valid integer
+  const counterValue = Number(counter);
+  if (isNaN(counterValue) || !Number.isInteger(counterValue)) {
+    return res.status(400).json({
+      error: "Invalid counter value. Please provide a valid integer.",
+    });
+  }
 
-// Delete all columns
+  db.run("DELETE FROM counter", (err) => {
+    if (err) {
+      return res
+        .status(500)
+        .json({ error: "An error occurred while deleting the counter." });
+    }
+  });
+
+  const insertItemsQuery = `
+    INSERT INTO counter (value) VALUES (?)
+  `;
+
+  db.run(insertItemsQuery, [counterValue], (err) => {
+    if (err) {
+      return res
+        .status(500)
+        .json({ error: "An error occurred while updating the counter." });
+    }
+
+    res.json({ message: "Counter table successfully updated!" });
+  });
+};
+
 exports.deleteAllColumns = (req, res) => {
-  // Fetch all column names from the "columns_list" table
   const selectColumnNamesQuery = `
     SELECT columnName FROM columns_list
   `;
@@ -57,13 +84,11 @@ exports.deleteAllColumns = (req, res) => {
     if (err) {
       return res.status(500).json({ error: err.message });
     }
-
-    // Iterate through the fetched column names and delete the corresponding tables
+    console.log(rows);
     rows.forEach((row) => {
-      const columnName = row.columnName;
-      
-      // Delete the table with the fetched columnName
-      db.run(`DELETE FROM ${columnName}`, [], (err) => {
+      const tableName = row.columnName;
+
+      db.run(`DELETE FROM ${tableName}`, [], (err) => {
         if (err) {
           return res.status(500).json({ error: err.message });
         }
@@ -74,17 +99,14 @@ exports.deleteAllColumns = (req, res) => {
   });
 };
 
-// Retrieve columns by name
-exports.getColumnsByName = (req, res) => {
-  const columnName = req.params.columnName;
-  // Create the table if it doesn't exist
-  createTableIfNotExists(columnName, (err) => {
+exports.getTableByName = (req, res) => {
+  const tableName = req.params.tableName;
+  createTableIfNotExists(tableName, (err) => {
     if (err) {
       return res.status(500).json({ error: err.message });
     }
 
-    // Now that the table exists (or already existed), you can execute the SELECT query
-    const selectQuery = `SELECT * FROM ${columnName}`;
+    const selectQuery = `SELECT * FROM ${tableName}`;
     db.all(selectQuery, [], (err, rows) => {
       if (err) {
         return res.status(500).json({ error: err.message });
@@ -94,45 +116,44 @@ exports.getColumnsByName = (req, res) => {
   });
 };
 
-// Add data to a table specified by columnName
 exports.addDataToTable = (req, res) => {
-  const columnName = req.params.columnName;
-  const { name, isChecked,isActive,uuid } = req.body; // Assuming the request body includes name and isChecked properties
+  const tableName = req.params.tableName;
+  const { name, isChecked, isActive, uuid } = req.body;
   const insertQuery = `
-    INSERT INTO ${columnName} (name,${isChecked === false ? "isChecked," : ""}${isActive === false ? "isActive," : ""} uuid)
-    VALUES (?,${isChecked === false ? "?," : ""}${isActive === false ? "?," : ""}?)
+    INSERT INTO ${tableName} (name,${isChecked === false ? "isChecked," : ""}${
+    isActive === false ? "isActive," : ""
+  } uuid)
+    VALUES (?,${isChecked === false ? "?," : ""}${
+    isActive === false ? "?," : ""
+  }?)
   `;
 
-  // Execute the INSERT INTO query
-  db.run(insertQuery, [name, isChecked ? 1 : isActive ? 1 : 0, uuid], function (err) {
-    if (err) {
-      return res.status(500).json({ error: err.message });
-    }
+  db.run(
+    insertQuery,
+    [name, isChecked ? 1 : isActive ? 1 : 0, uuid],
+    function (err) {
+      if (err) {
+        return res.status(500).json({ error: err.message });
+      }
 
-    // Respond with the ID of the newly inserted row
-    res.json({ id: this.lastID });
-  });
+      res.json({ id: this.lastID });
+    }
+  );
 };
 
-// Add multiple data to a table specified by columnName, skipping duplicates
 exports.addMultipleDataToTable = (req, res) => {
-  const columnName = req.params.columnName;
-  const data = req.body; // Assuming the request body is an array of objects
+  const tableName = req.params.tableName;
+  const data = req.body;
 
-  // Validate the data or perform any necessary input validation here
-
-  // Construct the INSERT INTO query for batch insertion with an ON CONFLICT clause
-
-
-  // Use a Set to track unique names and skip duplicates
   const uniqueNames = new Set();
 
-  // Loop through the array and insert each object as a separate row
   data.forEach((item, index) => {
-    const { name, isChecked,uuid } = item;
+    const { name, isChecked, uuid } = item;
 
     const insertQuery = `
-    INSERT INTO ${columnName} (name,${isChecked !== null ? "isChecked," : ""} uuid)
+    INSERT INTO ${tableName} (name,${
+      isChecked !== null ? "isChecked," : ""
+    } uuid)
     VALUES (?,${isChecked !== null ? "?," : ""} ?)
   `;
 
@@ -142,12 +163,9 @@ exports.addMultipleDataToTable = (req, res) => {
           return res.status(500).json({ error: err.message });
         }
 
-        // Add the name to the uniqueNames Set
         uniqueNames.add(name);
 
-        // Check if all inserts are complete
         if (uniqueNames.size === data.length) {
-          // Respond with a success message or other appropriate response
           res.json({ message: "Data inserted successfully" });
         }
       });
@@ -155,41 +173,17 @@ exports.addMultipleDataToTable = (req, res) => {
   });
 };
 
-exports.overwriteColumn = (req, res) => {
-  console.log('updateColumn')
-  const columnName = req.params.columnName;
-  const { name, isChecked } = req.body; // Assuming the request body contains the updated data
-
-  // Construct the UPDATE query to update all records in the column
-  const updateQuery = `
-    UPDATE ${columnName}
-    SET name = ?, isChecked = ?
-  `;
-
-  db.run(updateQuery, [name, isChecked ? 1 : 0], function (err) {
-    if (err) {
-      return res.status(500).json({ error: err.message });
-    }
-
-    res.json({ message: "Records updated successfully" });
-  });
-};
-
-// Update a record in a table specified by columnName by ID
 exports.updateColumn = (req, res) => {
-  console.log('updateColumn')
-  const columnName = req.params.columnName;
-  const { id } = req.params; // Assuming the request contains the record ID
-  const { name, isChecked } = req.body; // Assuming the request body contains the updated data
-  console.log(name,isChecked)
-  // Construct the UPDATE query
-  const updateQuery = `
-    UPDATE ${columnName}
-    SET name = ?, isChecked = ?
-    WHERE id = ?
-  `;
+  const tableName = req.params.tableName;
+  const { uuid } = req.params;
+  const { name, isChecked } = req.body;
 
-  db.run(updateQuery, [name, isChecked ? 1 : 0, id], function (err) {
+  const updateQuery = `
+    UPDATE ${tableName}
+    SET name = ?, isChecked = ?
+    WHERE uuid = ?
+  `;
+  db.run(updateQuery, [name, isChecked ? 1 : 0, uuid], function (err) {
     if (err) {
       return res.status(500).json({ error: err.message });
     }
@@ -198,18 +192,16 @@ exports.updateColumn = (req, res) => {
   });
 };
 
-// Delete a record from a table specified by columnName by ID
 exports.deleteColumn = (req, res) => {
-  const columnName = req.params.columnName;
-  const { id } = req.params; // Assuming the request contains the record ID
+  const tableName = req.params.tableName;
+  const { uuid } = req.params;
 
-  // Construct the DELETE query
   const deleteQuery = `
-    DELETE FROM ${columnName}
-    WHERE id = ?
+    DELETE FROM ${tableName}
+    WHERE uuid = ?
   `;
 
-  db.run(deleteQuery, [id], function (err) {
+  db.run(deleteQuery, [uuid], function (err) {
     if (err) {
       return res.status(500).json({ error: err.message });
     }
@@ -218,20 +210,17 @@ exports.deleteColumn = (req, res) => {
   });
 };
 
-
 exports.addItemsToColumnC = (req, res) => {
-  // Get the new data for column C from the request body
   const newDataForColumnC = req.body;
 
-  // Check if newDataForColumnC is an array
   if (!Array.isArray(newDataForColumnC)) {
-    return res.status(400).json({ error: "Invalid input data. Expected an array of objects." });
+    return res
+      .status(400)
+      .json({ error: "Invalid input data. Expected an array of objects." });
   }
 
-  // Create an array to store the values to be inserted
   const valuesToInsert = [];
 
-  // Iterate through the array and extract 'name' and 'uuid' properties
   for (const item of newDataForColumnC) {
     if (item && typeof item === "object" && "name" in item && "uuid" in item) {
       const { name, uuid } = item;
@@ -240,21 +229,20 @@ exports.addItemsToColumnC = (req, res) => {
   }
 
   if (valuesToInsert.length === 0) {
-    return res.status(400).json({ error: "No valid data to insert into column C." });
+    return res
+      .status(400)
+      .json({ error: "No valid data to insert into column C." });
   }
 
-  // Begin a transaction
   db.serialize(() => {
     db.run("BEGIN");
 
-    // Delete existing data from table C
     db.run("DELETE FROM C", (err) => {
       if (err) {
         db.run("ROLLBACK");
         return res.status(500).json({ error: err.message });
       }
 
-      // Insert the new data into table C
       const insertQuery = `
         INSERT INTO C (name, uuid)
         VALUES (?, ?)
@@ -269,13 +257,42 @@ exports.addItemsToColumnC = (req, res) => {
         });
       }
 
-      // Commit the transaction
       db.run("COMMIT", (err) => {
         if (err) {
           return res.status(500).json({ error: err.message });
         }
         res.json({ message: "Items added to column C successfully" });
       });
+    });
+  });
+};
+
+exports.setActiveItemInTable = (req, res) => {
+  const tableName = req.params.tableName;
+  const { uuid } = req.params;
+
+  const updateAllItemsQuery = `
+    UPDATE ${tableName}
+    SET isActive = 0
+  `;
+
+  db.run(updateAllItemsQuery, [], (err) => {
+    if (err) {
+      return res.status(500).json({ error: err.message });
+    }
+
+    const updateSelectedItemQuery = `
+      UPDATE ${tableName}
+      SET isActive = 1
+      WHERE uuid = ?
+    `;
+
+    db.run(updateSelectedItemQuery, [uuid], (err) => {
+      if (err) {
+        return res.status(500).json({ error: err.message });
+      }
+
+      res.json({ message: "Active item selected successfully" });
     });
   });
 };

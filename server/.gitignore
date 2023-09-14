@@ -24,4 +24,5 @@ yarn-error.log*
 
 # Dependency lock files
 package-lock.json
+package-lock.yaml
 yarn.lock

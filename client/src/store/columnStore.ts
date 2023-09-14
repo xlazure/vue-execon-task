@@ -1,17 +1,25 @@
-import { inject, reactive, watch } from 'vue'
+import { reactive, watch } from 'vue'
 import type { MyStoreState, ColumnItem } from './columnStoreTypes'
 import { getAllCountries } from '@/services/countriesApi/controller'
-import { addDataToLocalStorage } from '@/localStorage'
-import {addMultipleDataToColumn,addDataToColumn, replaceOrAddToColumnC} from '../services/databaseApi/controller'
+import { addDataToLocalStorage } from '@/fetchingMethods'
+import {
+  addMultipleDataToColumn,
+  addDataToColumn,
+  replaceOrAddToColumnC,
+  updateDataFormColumnById,
+  setActiveItemFromTableById,
+  removeDataFromColumnById,
+  setCounterToTable
+} from '../services/databaseApi/controller'
 
-const initialData: MyStoreState = {
+export const initialData: MyStoreState = {
   columns: {
     A: [],
     B: [],
     C: []
   },
   loading: false,
-  error: null,
+  error: [],
   counter: 0,
   fetching: true
 }
@@ -38,30 +46,29 @@ export const getters = {
 
   isLoading: () => {
     return state.loading
-  },
-
+  }
 }
 
 export const mutations = {
-  setFetching: (value:boolean)=>{
+  setFetching: (value: boolean) => {
     state.fetching = value
   },
-  createItem: (columnName: string, newItem: ColumnItem) => {
+  createItem: async (columnName: string, newItem: ColumnItem) => {
     if (columnName in state.columns) {
-      const column = state.columns[columnName];
-      console.log(newItem)
-      // Check if an item with the same name already exists
-      const existingItem = column.find((item) => item.name === newItem.name);
-      
+      const column = state.columns[columnName]
+      const existingItem = column.find((item) => item.name === newItem.name)
+
       if (!existingItem) {
-        column.push(newItem);
-        addDataToColumn(columnName,newItem)
+        column.push(newItem)
+
+        if (!state.fetching) {
+          await addDataToColumn(columnName, newItem)
+        }
       }
     } else {
-      mutations.setError(`Column with name "${columnName}" doesn't exist in store`);
+      mutations.setError(`Column with name "${columnName}" doesn't exist in store`)
     }
   },
-  
 
   addMultipleData: (columnName: string, items: ColumnItem[]) => {
     if (state.columns[columnName]) {
@@ -71,70 +78,73 @@ export const mutations = {
     }
   },
 
-  updateItem: (columnName: string, updatedItem: ColumnItem) => {
+  updateItem: async (columnName: string, updatedItem: ColumnItem) => {
     if (columnName in state.columns) {
       const column = state.columns[columnName]
       const index = column.findIndex((item) => item.name === updatedItem.name)
 
       if (index !== -1) {
         column.splice(index, 1, updatedItem)
+
+        if (!state.fetching) {
+          await updateDataFormColumnById(columnName, updatedItem)
+        }
       } else {
-        mutations.setError(`Item with name "${updatedItem.name}" not found in column "${columnName}"`)
+        mutations.setError(
+          `Item with name "${updatedItem.name}" not found in column "${columnName}"`
+        )
       }
     } else {
       mutations.setError(`Column with name "${columnName}" doesn't exist in store`)
     }
   },
 
-  deleteItem: (columnName: string, deletedItem: ColumnItem) => {
+  deleteItem: async (columnName: string, deletedItem: ColumnItem) => {
     if (columnName in state.columns) {
-      const column = state.columns[columnName];
-      const updatedColumn = column.filter((item) => item.uuid !== deletedItem.uuid);
-  
-      if (updatedColumn.length === column.length) {
-        mutations.setError(`Item with uuid "${deletedItem.uuid}" not found in column "${columnName}"`);
-      } else {
-        state.columns[columnName] = updatedColumn;
+      const column = state.columns[columnName]
+
+      const itemIndex = column.findIndex((item) => item.uuid === deletedItem.uuid)
+
+      if (itemIndex !== -1) {
+        column.splice(itemIndex, 1)
+
+        if (!state.fetching) {
+          await removeDataFromColumnById(columnName, deletedItem.uuid)
+        }
       }
     } else {
-      mutations.setError(`Column with name "${columnName}" doesn't exist in store`);
+      mutations.setError(`Column with name "${columnName}" doesn't exist in store`)
     }
   },
-
-  // deleteItem: (columnName: string, deletedItem: ColumnItem) => {
-  //   if (columnName in state.columns) {
-  //     const column = state.columns[columnName]
-  //     const index = column.findIndex((item) => item.uuid === deletedItem.uuid)
-
-  //     if (index !== -1) {
-  //       column.splice(index, 1)
-  //     } else {
-  //       mutations.setError(`Item with name "${deletedItem.name}" not found in column "${columnName}"`)
-  //     }
-  //   } else {
-  //     mutations.setError(`Column with name "${columnName}" doesn't exist in store`)
-  //   }
-  // },
 
   setColumn: async (columnName: string, item: ColumnItem) => {
     if (columnName in state.columns) {
       state.columns[columnName] = [item]
-      // replaceOrAddToColumnC
-      await replaceOrAddToColumnC([item])
+      if (!state.fetching) {
+        await replaceOrAddToColumnC([item])
+      }
     } else {
       mutations.setError(`Column with name "${columnName}" doesn't exist in store`)
     }
   },
 
-  setError: (error: string | null) => {
-    state.error = error
+  setError: (error: any) => {
+    state.error.push({ msg: error.error ? error.error : error, code: error.code ? error.code : '' })
+  },
+
+  deleteError: (errorToDelete: any) => {
+    const index = state.error.indexOf(errorToDelete)
+
+    if (index !== -1) {
+      state.error.splice(index, 1)
+    }
   },
 
   clearError: () => {
-    state.error = null
+    state.error = []
   },
 
-  incrementCounter: () => {
+  incrementCounter: async () => {
     state.counter++
   },
 
@@ -147,8 +157,8 @@ export const mutations = {
   },
 
   reset: () => {
-    state.columns = { A:[],B:[],C:[] };
-    state.counter = 0;
+    state.columns = { A: [], B: [], C: [] }
+    state.counter = 0
   }
 }
 export const actions = {
@@ -166,28 +176,33 @@ export const actions = {
         uuid: Math.random().toString(36).slice(2, 9)
       }))
       const dataToBeAdded = processedData.slice(state.counter * limit, (state.counter + 1) * limit)
-      
+
       mutations.addMultipleData('A', dataToBeAdded)
-      await addMultipleDataToColumn("A", dataToBeAdded);
 
       mutations.incrementCounter()
       mutations.setLoading(false)
-
-      if(state.fetching) {
-        addDataToLocalStorage('counter',state.counter)
+      if (!state.fetching) {
+        await addMultipleDataToColumn('A', dataToBeAdded)
+        await setCounterToTable(state.counter)
+      } else {
+        addDataToLocalStorage('counter', state.counter)
       }
-
-    } catch (error) {
-      mutations.setError('Error fetching countries:' + error)
+    } catch (err) {
+      mutations.setError('Error fetching countries')
     }
   },
 
-  selectActiveItemFormColumn: (columnName: string, item: ColumnItem) => {
+  selectActiveItemFormColumn: async (columnName: string, item: ColumnItem) => {
     const column = state.columns[columnName]
     const index = column.findIndex((item2) => item2.uuid === item.uuid)
 
     if (index !== -1) {
       column[index].isActive = true
+
+      if (!state.fetching) {
+        await setActiveItemFromTableById(columnName, column[index].uuid)
+      }
+
       column.forEach((item2) => {
         if (item2.uuid !== item.uuid) {
           item2.isActive = false
@@ -201,14 +216,15 @@ const useColumnStore = () => ({
   getters,
   mutations,
   actions,
-  state
+  initialData
 })
 
 watch(
   () => state.columns,
-  (newColumns,oldColumns) => {
-    if (!state.fetching) return;
-    addDataToLocalStorage('columns', oldColumns)
+  (newColumns, oldColumns) => {
+    if (!state.fetching) return
+    console.log('save columns')
+    addDataToLocalStorage('columns', newColumns)
   },
   { deep: true }
 )

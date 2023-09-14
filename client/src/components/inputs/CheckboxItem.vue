@@ -1,7 +1,12 @@
 <template>
   <span>
-    <input :id="'c' + index" type="checkbox" :checked="inputProps.isChecked" :name="inputProps.name"
-      @change="handleChange" />
+    <input
+      :id="'c' + index"
+      type="checkbox"
+      :checked="inputProps.isChecked"
+      :name="inputProps.name"
+      @change="handleChange"
+    />
     <label :for="'c' + index" :draggable="isDraggable" @dragstart="onDragStart">
       <span class="custom-button">
         {{ inputProps.name }}
@@ -11,10 +16,15 @@
 </template>
 
 <script lang="ts" setup>
-import useColumnStore from '@/store/columnStore';
-import type { ColumnItem } from '@/store/columnStoreTypes';
+import useColumnStore from '@/store/columnStore'
+import type { ColumnItem } from '@/store/columnStoreTypes'
 
-const { inputProps, isDraggable, index, columnName } = defineProps(['inputProps', 'isDraggable', 'index', 'columnName'])
+const { inputProps, isDraggable, index, columnName } = defineProps([
+  'inputProps',
+  'isDraggable',
+  'index',
+  'columnName'
+])
 const { mutations } = useColumnStore()
 
 function onDragStart(event: DragEvent) {
@@ -24,19 +34,17 @@ function onDragStart(event: DragEvent) {
       name: inputProps.name,
       isChecked: !inputProps.isChecked,
       uuid: inputProps.uuid
-    },
-  };
-  event.dataTransfer?.setData("application/json", JSON.stringify(data));
+    }
+  }
+  event.dataTransfer?.setData('application/json', JSON.stringify(data))
 }
 
 function handleChange(event: Event) {
-  console.log(inputProps)
   const target = event.target as HTMLInputElement
-  const { name, uuid } = inputProps;
+  const { name, uuid } = inputProps
   mutations.updateItem(columnName, { name, isChecked: target.checked, uuid })
 
   if (target.checked) {
-    
     const newItem: ColumnItem = {
       name,
       isActive: false,
@@ -48,10 +56,7 @@ function handleChange(event: Event) {
     mutations.deleteItem('B', inputProps)
     mutations.deleteItem('C', inputProps)
   }
-
 }
-
-
 </script>
 
 <style lang="scss" scoped>
@@ -80,7 +85,7 @@ input {
   display: none;
 }
 
-input:checked+label {
+input:checked + label {
   background-color: #1bdc1b;
 }
 </style>
