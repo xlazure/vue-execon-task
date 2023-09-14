@@ -18,4 +18,4 @@
 11. Zaznaczenie jednego z państw w kolumnie B powoduje wyświetlenie go w kolumnie trzeciej C w postaci kafla podobnego do kafli z A. ✅
 12. Przeniesienie( usunięcie) kafla (drag/drop) z kolumny C do A powoduje odznaczenie checkboxa w A ✅
 13. Kontekst aplikacji powinien być zapamiętany w dowolny sposób aby zamykając przeglądarkę można było kontunuować bezsensowne przerzucanie państw między kolumnami. ✅
-14. Wyświetlenie państwa w kolumnie C musi być osiągalne również wyłącznie przy korzystaniu z klawiatury. 
+14. Wyświetlenie państwa w kolumnie C musi być osiągalne również wyłącznie przy korzystaniu z klawiatury. ✅
