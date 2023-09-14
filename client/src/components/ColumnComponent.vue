@@ -9,8 +9,8 @@ const { mutations } = useColumnStore()
 
 const focusedColumnName = inject('columnFocus') as Ref<string | undefined>;
 const currentColumn: Ref<string | undefined> = ref('')
-  
-  const isAnimated = computed(() => columnName === currentColumn.value)
+
+const isAnimated = computed(() => columnName === currentColumn.value)
 
 
 function onDrop(event: DragEvent) {
@@ -63,7 +63,7 @@ function handleDragLeave(e: any) {
 }
 
 
-function setFocusColumn() {
+function setFocusColumn(): any {
   if (!focusedColumnName && columnName === undefined) return;
   focusedColumnName.value = columnName
 }
@@ -76,14 +76,9 @@ function setFocusColumn() {
       <div v-if="$slots.objects" class="block">
         <slot name="objects" />
       </div>
-      <div
-        class="block"
-        :id="columnName"
-        :class="{ animate: isAnimated }"
-        @dragenter.prevent="handleDragEnter"
-        @dragleave.prevent="handleDragLeave"
-      >
-        <ColumnInputPicker :columnName="columnName" />
+      <div class="block" :id="columnName" :class="{ animate: isAnimated }" @dragenter.prevent="handleDragEnter"
+        @dragleave.prevent="handleDragLeave">
+        <ColumnInputPicker :columnName="columnName"/>
       </div>
     </div>
   </section>
@@ -121,6 +116,7 @@ section {
     }
   }
 }
+
 .animate {
   position: relative;
   animation: drop 2s infinite;
@@ -139,9 +135,11 @@ section {
     0% {
       background-color: rgba(0, 0, 255, 0.226);
     }
+
     50% {
       background-color: rgba(0, 0, 255, 0.526);
     }
+
     100% {
       background-color: rgba(0, 0, 255, 0.226);
     }

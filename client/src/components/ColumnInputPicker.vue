@@ -1,3 +1,4 @@
+<!-- ColumnInputPicker.vue -->
 <template>
   <div>
     <span v-for="(item, index) in columnData" :key="item.uuid" @keydown.left="moveRight(index)"
@@ -13,14 +14,13 @@
 <script lang="ts" setup>
 import inputConfig from './input.config'
 import useColumnStore, { actions } from '@/store/columnStore'
-import { computed, defineAsyncComponent, onMounted, inject, ref, type Ref } from 'vue'
+import { computed, defineAsyncComponent, onMounted, inject, ref, type Ref, watch } from 'vue'
 
 
-const columnFocus= inject<Ref<string> | undefined>('columnFocus')
+const columnFocus = inject<Ref<string> | undefined>('columnFocus')
 const { columnName }: any = defineProps(['columnName'])
 
 const currentIndex = ref<number | null>(0)
-
 const { getters, mutations } = useColumnStore()
 
 const columnConfig = inputConfig.columns[columnName]
@@ -28,6 +28,8 @@ const columnConfig = inputConfig.columns[columnName]
 const isDraggable = columnConfig.isDraggable || false
 const isLoading = computed(() => getters.isLoading())
 const columnData = computed(() => getters.getColumnData(columnName))
+
+
 
 function moveRight(index: number) {
   if (index >= columnData.value.length - 1) {
@@ -76,7 +78,7 @@ const handleKeyboardNavigation = (event: KeyboardEvent) => {
 };
 
 const toggleCheckbox = (index: number) => {
-  
+
   if (columnFocus?.value === 'A' && columnName === 'A') {
     if (currentIndex.value !== null) {
       const item = columnData.value[index]
@@ -121,6 +123,10 @@ const DynamicComponent = defineAsyncComponent(() => {
   return import(`./inputs/${columnConfig.type}Item.vue`)
 })
 
+if (columnFocus)
+  watch(columnFocus, () => {
+    currentIndex.value = 0
+  })
 
 </script>
 
