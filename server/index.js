@@ -11,7 +11,7 @@ app.use(express.json());
 // );
 app.use(cors());
 
-app.use("/api", routes);
+// app.use("/api", routes);
 
 app.use("/", async (req, res, next) => {
   return res.status(200).json({

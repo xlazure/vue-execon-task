@@ -7,7 +7,7 @@
     "node": "18.x"
   },
   "scripts": {
-    "build": "nodemon server.js"
+    "start": "nodemon server.js"
   },
   "keywords": [],
   "author": "",
