@@ -1,6 +1,6 @@
 const express = require("express");
 const app = express();
-// const routes = require("./routes");
+const routes = require("./routes");
 const cors = require("cors");
 
 // app.use(express.json());
@@ -11,7 +11,7 @@ const cors = require("cors");
 // );
 // app.use(cors());
 
-// app.use("/api", routes);
+app.use("/api", routes);
 
 app.use("/", async (req, res, next) => {
   return res.status(200).json({
